@@ -7,13 +7,14 @@ STORE_NOT_FOUND = "Store not found."
 STORE_DELETED = "Store deleted."
 
 class Store(Resource):
-    def get(self, name):
+    @classmethod
+    def get(cls, self, name):
         store = StoreModel.find_by_name(name)
         if store:
             return store.json()
         return {"message": STORE_NOT_FOUND}, 404
-
-    def post(self, name):
+    @classmethod
+    def post(cls, self, name):
         if StoreModel.find_by_name(name):
             return (
                 {"message": NAME_ALREADY_EXISTS.format(name)},
@@ -28,7 +29,8 @@ class Store(Resource):
 
         return store.json(), 201
 
-    def delete(self, name):
+    @classmethod
+    def delete(cls, self, name):
         store = StoreModel.find_by_name(name)
         if store:
             store.delete_from_db()
