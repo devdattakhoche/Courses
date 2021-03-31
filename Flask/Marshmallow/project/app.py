@@ -1,3 +1,4 @@
+from resources.item import Item, ItemList
 from flask import Flask, jsonify
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
@@ -39,6 +40,9 @@ def check_if_token_in_blacklist(decrypted_token):
 # The following callbacks are used for customizing jwt response/error messages.
 # The original ones may not be in a very pretty format (opinionated)
 
+
+api.add_resource(Item, "/item/<string:name>")
+api.add_resource(ItemList, "/items")
 api.add_resource(UserRegister, "/register")
 api.add_resource(User, "/user/<int:user_id>")
 api.add_resource(UserLogin, "/login")

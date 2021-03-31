@@ -1,26 +1,24 @@
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
 from flask_jwt_extended import (
     jwt_required,
 )
 from models.item import ItemModel
+from schema.item import ItemSchema
+from flask import request
+from marshmallow import ValidationError
 
 BLANK_ERROR = "{} cannot be left blank!"
 ITEM_NOT_FOUND = "Item not found."
-ITEM_EXISTS =  "An item with name '{}' already exists."
-ERROR_INSERTING  = "An error occurred while inserting the item."
+ITEM_EXISTS = "An item with name '{}' already exists."
+ERROR_INSERTING = "An error occurred while inserting the item."
 ITEM_DELETED = "Item deleted."
 
-class Item(Resource):
-    parser = reqparse.RequestParser()
-    parser.add_argument(
-        "price", type=float, required=True, help=BLANK_ERROR.format("Price")
-    )
-    parser.add_argument(
-        "store_id", type=int, required=True, help=BLANK_ERROR.format("Price")
-    )
+item_schema = ItemSchema()
+item_list_schema = ItemSchema(many=True)
 
+class Item(Resource):
     @classmethod
-    def get(cls, name):
+    def get(cls, name: str):
         item = ItemModel.find_by_name(name)
         if item:
             return item.json(), 200
@@ -28,16 +26,19 @@ class Item(Resource):
 
     @classmethod
     @jwt_required(fresh=True)
-    def post(cls,name):
+    def post(cls, name: str):
         if ItemModel.find_by_name(name):
             return (
-                {"message":ITEM_EXISTS.format(name)},
+                {"message": ITEM_EXISTS.format(name)},
                 400,
             )
 
-        data = Item.parser.parse_args()
-
-        item = ItemModel(name, **data)
+        item_json = request.get_json()
+        item_json["name"] = name
+        try:
+            item = item_schema.load(item_json)
+        except ValidationError as err:
+            return err.messages, 400
 
         try:
             item.save_to_db()
@@ -48,30 +49,32 @@ class Item(Resource):
 
     @classmethod
     @jwt_required
-    def delete( cls, name):
+    def delete(cls, name: str):
         item = ItemModel.find_by_name(name)
         if item:
             item.delete_from_db()
             return {"message": ITEM_DELETED}, 200
         return {"message": ITEM_NOT_FOUND}, 404
-    
+
     @classmethod
-    def put( cls,  name):
-        data = Item.parser.parse_args()
-
+    def put(cls, name: str):
+        item_json = request.get_json()
         item = ItemModel.find_by_name(name)
-
         if item:
-            item.price = data["price"]
+            item.price = item_json["price"]
         else:
-            item = ItemModel(name, **data)
+            item_json["name"] = name
+
+            try:
+                item = item_schema.load(item_json)
+            except ValidationError as err:
+                return err.messages, 400
 
         item.save_to_db()
-
-        return item.json(), 200
+        return item_schema.dump(item), 200
 
 
 class ItemList(Resource):
     @classmethod
     def get(cls):
-        return {"items": [item.json() for item in ItemModel.find_all()]}, 200
+        return {"items": item_list_schema.dump(ItemModel.find_all())}, 200
