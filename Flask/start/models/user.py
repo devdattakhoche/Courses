@@ -1,5 +1,7 @@
-from typing import Dict
+from typing import Dict, Union
 from db import db
+
+userJSON = [str,Union[int,str]]
 
 
 class UserModel(db.Model):
