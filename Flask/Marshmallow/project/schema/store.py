@@ -1,11 +1,12 @@
+from schema.item import ItemSchema
 from marshmallow import Schema 
 from ma import ma
 from models.store import StoreModel
 
-class ItemSchema(ma.SQLAlchemyAutoSchema):
+class StoreSchema(ma.SQLAlchemyAutoSchema):
+    items =  ma.Nested(ItemSchema, many=True)
     class Meta:
         model = StoreModel
-        load_only = ("store",)
         dump_only = ("id",)
         include_fk = True
 

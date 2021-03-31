@@ -1,5 +1,7 @@
 from db import db
 from typing import List
+from models.store import StoreModel
+
 
 class ItemModel(db.Model):
     __tablename__ = "items"

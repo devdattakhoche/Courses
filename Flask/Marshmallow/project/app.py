@@ -1,3 +1,4 @@
+from resources.store import Store, StoreList
 from resources.item import Item, ItemList
 from flask import Flask, jsonify
 from flask_restful import Api
@@ -40,7 +41,8 @@ def check_if_token_in_blacklist(decrypted_token):
 # The following callbacks are used for customizing jwt response/error messages.
 # The original ones may not be in a very pretty format (opinionated)
 
-
+api.add_resource(Store, "/store/<string:name>")
+api.add_resource(StoreList, "/stores")
 api.add_resource(Item, "/item/<string:name>")
 api.add_resource(ItemList, "/items")
 api.add_resource(UserRegister, "/register")
