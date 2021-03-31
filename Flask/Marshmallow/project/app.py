@@ -3,7 +3,7 @@ from resources.item import Item, ItemList
 from flask import Flask, jsonify
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
-
+from marshmallow import ValidationError
 from ma import ma
 from db import db
 from blacklist import BLACKLIST
@@ -21,6 +21,9 @@ app.config["JWT_BLACKLIST_TOKEN_CHECKS"] = [
 app.secret_key = "jose"  # could do app.config['JWT_SECRET_KEY'] if we prefer
 api = Api(app)
 
+@app.errorhandler(ValidationError)
+def handle_marshmallow_validation(err):
+    return jsonify(err.messages,400)
 
 @app.before_first_request
 def create_tables():
@@ -32,9 +35,10 @@ jwt = JWTManager(app)
 
 # This method will check if a token is blacklisted, and will be called automatically when blacklist is enabled
 
-def check_if_token_in_blacklist(decrypted_token):
+@jwt.token_in_blocklist_loader
+def check_if_token_in_blacklist(jwt_header, jwt_payload):
     return (
-        decrypted_token["jti"] in BLACKLIST
+        jwt_payload["jti"] in BLACKLIST
     )  # Here we blacklist particular JWTs that have been created in the past.
 
 

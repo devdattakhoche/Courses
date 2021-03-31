@@ -26,10 +26,9 @@ user_schema = UserSchema()
 class UserRegister(Resource):
     @classmethod
     def post(cls):
-        try:
-            user = user_schema.load(request.get_json())
-        except ValidationError as err :
-            return err.messages, 400
+       
+        user = user_schema.load(request.get_json())
+       
 
         if UserModel.find_by_username(user.username):
             return {"message": NAME_ALREADY_EXISTS}, 400
@@ -63,10 +62,8 @@ class User(Resource):
 class UserLogin(Resource):
     @classmethod
     def post(cls):
-        try:
-            user_data = user_schema.load(request.get_json());
-        except ValidationError as err :
-            return err.messgaes, 400
+        user_data = user_schema.load(request.get_json());
+    
 
         user = UserModel.find_by_username(user_data.username)
 
