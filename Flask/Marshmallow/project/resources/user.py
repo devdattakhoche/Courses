@@ -6,11 +6,13 @@ from flask_jwt_extended import (
     jwt_required,
     get_jwt,
 )
-
-from flask_restful import Resource, reqparse
+from flask import request
+from flask_restful import Resource
 from werkzeug.security import safe_str_cmp
 from models.user import UserModel
 from blacklist import BLACKLIST
+from schema.user import UserSchema
+from marshmallow import ValidationError
 
 BLANK_ERROR = "This field cannot be left blank"
 NAME_ALREADY_EXISTS = "A user with that username already exists."
@@ -20,24 +22,19 @@ USER_DELETED = "User deleted."
 INVALID_CREDENTIALS = "Invalid Credentials!"
 LOGOUT_SUCCESSFUL = "User <id={}> successfully logged out."
 
-_user_parser = reqparse.RequestParser()
-_user_parser.add_argument(
-    "username", type=str, required=True, help=BLANK_ERROR
-)
-_user_parser.add_argument(
-    "password", type=str, required=True, help=BLANK_ERROR
-)
-
-
+user_schema = UserSchema()
 class UserRegister(Resource):
     @classmethod
     def post(cls):
-        data = _user_parser.parse_args()
+        try:
+            user_data = user_schema.load(request.get_json())
+        except ValidationError as err :
+            return err.messages, 400
 
-        if UserModel.find_by_username(data["username"]):
+        if UserModel.find_by_username(user_data["username"]):
             return {"message": NAME_ALREADY_EXISTS}, 400
 
-        user = UserModel(**data)
+        user = UserModel(**user_data)
         user.save_to_db()
 
         return {"message": CREATED_SUCCESSFULLY}, 201
@@ -52,6 +49,8 @@ class User(Resource):
     @classmethod
     def get(cls, user_id: int):
         user = UserModel.find_by_id(user_id)
+        print(user.json())
+        
         if not user:
             return {"message": USER_NOT_FOUND}, 404
         return user.json(), 200
@@ -68,12 +67,15 @@ class User(Resource):
 class UserLogin(Resource):
     @classmethod
     def post(cls):
-        data = _user_parser.parse_args()
+        try:
+            user_data = user_schema.load(request.get_json());
+        except ValidationError as err :
+            return err.messgaes, 400
 
-        user = UserModel.find_by_username(data["username"])
+        user = UserModel.find_by_username(user_data["username"])
 
         # this is what the `authenticate()` function did in security.py
-        if user and safe_str_cmp(user.password, data["password"]):
+        if user and safe_str_cmp(user.password, user_data["password"]):
             # identity= is what the identity() function did in security.py—now stored in the JWT
             access_token = create_access_token(identity=user.id, fresh=True)
             refresh_token = create_refresh_token(user.id)
@@ -84,14 +86,12 @@ class UserLogin(Resource):
 
 class UserLogout(Resource):
     @classmethod
-    @jwt_required
-    # x=2
+    @jwt_required()
     def post(cls):
-        # print("------",get_jwt(),"------")
         jti = get_jwt()["jti"]  # jti is "JWT ID", a unique identifier for a JWT.
         user_id = get_jwt_identity()
         BLACKLIST.add(jti)
-        return {"message": LOGOUT_SUCCESSFUL.format(5)}, 200
+        return {"message": LOGOUT_SUCCESSFUL.format(user_id)}, 200
 
 
 class TokenRefresh(Resource):
