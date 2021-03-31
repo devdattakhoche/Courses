@@ -1,7 +1,6 @@
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import (
     jwt_required,
-    fresh_jwt_required,
 )
 from models.item import ItemModel
 
@@ -28,7 +27,7 @@ class Item(Resource):
         return {"message": ITEM_NOT_FOUND}, 404
 
     @classmethod
-    @fresh_jwt_required
+    @jwt_required(fresh=True)
     def post(cls, self, name):
         if ItemModel.find_by_name(name):
             return (

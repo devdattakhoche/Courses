@@ -1,15 +1,14 @@
-from resources.store import NAME_ALREADY_EXISTS
-from resources.item import BLANK_ERROR
-from flask_restful import Resource, reqparse
-from werkzeug.security import safe_str_cmp
+
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
-    jwt_refresh_token_required,
     get_jwt_identity,
     jwt_required,
-    get_raw_jwt,
+    get_jwt,
 )
+
+from flask_restful import Resource, reqparse
+from werkzeug.security import safe_str_cmp
 from models.user import UserModel
 from blacklist import BLACKLIST
 
@@ -32,7 +31,7 @@ _user_parser.add_argument(
 
 class UserRegister(Resource):
     @classmethod
-    def post(cls, self):
+    def post(cls):
         data = _user_parser.parse_args()
 
         if UserModel.find_by_username(data["username"]):
@@ -68,7 +67,7 @@ class User(Resource):
 
 class UserLogin(Resource):
     @classmethod
-    def post(cls, self):
+    def post(cls):
         data = _user_parser.parse_args()
 
         user = UserModel.find_by_username(data["username"])
@@ -86,8 +85,9 @@ class UserLogin(Resource):
 class UserLogout(Resource):
     @classmethod
     @jwt_required
-    def post(cls, self):
-        jti = get_raw_jwt()["jti"]  # jti is "JWT ID", a unique identifier for a JWT.
+    def post(cls):
+        print("------",get_jwt(),"------")
+        jti = get_jwt()["jti"]  # jti is "JWT ID", a unique identifier for a JWT.
         user_id = get_jwt_identity()
         BLACKLIST.add(jti)
         return {"message": LOGOUT_SUCCESSFUL.format(user_id)}, 200
@@ -95,8 +95,8 @@ class UserLogout(Resource):
 
 class TokenRefresh(Resource):
     @classmethod
-    @jwt_refresh_token_required
-    def post(cls, self):
+    @jwt_required(refresh = True)
+    def post(cls):
         current_user = get_jwt_identity()
         new_token = create_access_token(identity=current_user, fresh=False)
         return {"access_token": new_token}, 200
