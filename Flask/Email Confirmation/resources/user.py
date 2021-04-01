@@ -4,21 +4,23 @@ from werkzeug.security import safe_str_cmp
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
-    jwt_refresh_token_required,
     get_jwt_identity,
     jwt_required,
-    get_raw_jwt,
+    get_jwt,
 )
 from models.user import UserModel
 from schemas.user import UserSchema
 from blacklist import BLACKLIST
 
+NOT_CONFIRMED = "User Email not confirmed!"
 USER_ALREADY_EXISTS = "A user with that username already exists."
 CREATED_SUCCESSFULLY = "User created successfully."
 USER_NOT_FOUND = "User not found."
 USER_DELETED = "User deleted."
 INVALID_CREDENTIALS = "Invalid credentials!"
 USER_LOGGED_OUT = "User <id={user_id}> successfully logged out."
+USER_CONFIRMED = "User confirmation has been successfully done!!"
+
 
 user_schema = UserSchema()
 
@@ -28,7 +30,7 @@ class UserRegister(Resource):
     def post(cls):
         user_json = request.get_json()
         user = user_schema.load(user_json)
-
+        print(user)
         if UserModel.find_by_username(user.username):
             return {"message": USER_ALREADY_EXISTS}, 400
 
@@ -48,7 +50,7 @@ class User(Resource):
 
     @classmethod
     def delete(cls, user_id: int):
-        user = UserModel.find_by_id(user_id)
+        user = UserModel.find_by_id(user_id=user_id)
         if not user:
             return {"message": USER_NOT_FOUND}, 404
 
@@ -65,18 +67,20 @@ class UserLogin(Resource):
         user = UserModel.find_by_username(user_data.username)
 
         if user and safe_str_cmp(user_data.password, user.password):
-            access_token = create_access_token(identity=user.id, fresh=True)
-            refresh_token = create_refresh_token(user.id)
-            return {"access_token": access_token, "refresh_token": refresh_token}, 200
-
+            if(user.activated):
+                access_token = create_access_token(identity=user.id, fresh=True)
+                refresh_token = create_refresh_token(user.id)
+                return {"access_token": access_token, "refresh_token": refresh_token}, 200
+            else :
+                return {"message":NOT_CONFIRMED.format(user.id)},400
         return {"message": INVALID_CREDENTIALS}, 401
 
 
 class UserLogout(Resource):
     @classmethod
-    @jwt_required
+    @jwt_required()
     def post(cls):
-        jti = get_raw_jwt()["jti"]  # jti is "JWT ID", a unique identifier for a JWT.
+        jti = get_jwt()["jti"]  # jti is "JWT ID", a unique identifier for a JWT.
         user_id = get_jwt_identity()
         BLACKLIST.add(jti)
         return {"message": USER_LOGGED_OUT.format(user_id)}, 200
@@ -84,8 +88,19 @@ class UserLogout(Resource):
 
 class TokenRefresh(Resource):
     @classmethod
-    @jwt_refresh_token_required
+    @jwt_required(refresh=True)
     def post(cls):
         current_user = get_jwt_identity()
         new_token = create_access_token(identity=current_user, fresh=False)
         return {"access_token": new_token}, 200
+
+class UserConfirmation(Resource):
+    @classmethod
+    def get(cls,user_id: int):
+        user=UserModel.find_by_id(user_id)
+        if not user :
+            return {"message":USER_NOT_FOUND}, 404
+            
+        user.activated = True
+        user.save_to_db()
+        return {"message":USER_CONFIRMED},200
