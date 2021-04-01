@@ -44,8 +44,8 @@ class UserModel(db.Model):
         # string[:-1] means copying from start (inclusive) to the last index (exclusive), a more detailed link below:
         # from `http://127.0.0.1:5000/` to `http://127.0.0.1:5000`, since the url_for() would also contain a `/`
         # https://stackoverflow.com/questions/509211/understanding-pythons-slice-notation
-        text = f"Please click the link to confirm your registration: {link}"
-        html = f"<html>Please click the link to confirm your registration: <a href={link}>link</a></html>"
+        text = f"Please click the link to confirm your registration: {link} "
+        html = f"<html>Please click the link to confirm your{link} registration: <a href={link}>link</a></html>"
         # send e-mail with MailGun
         return Mailgun.send_email([self.email], subject, text, html)
 

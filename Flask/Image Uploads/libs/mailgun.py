@@ -38,7 +38,7 @@ class Mailgun:
             },
         )
         if response.status_code != 200:
-            # print(response.status_code)
-            # print(response.json())
+            print(response.status_code)
+            print(response.content)
             raise MailGunException(gettext("mailgun_error_send_email"))
         return response
