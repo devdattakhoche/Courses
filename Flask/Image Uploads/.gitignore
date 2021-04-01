@@ -1,0 +1,4 @@
+*.env
+*.env.example
+*.db
+Config.py
