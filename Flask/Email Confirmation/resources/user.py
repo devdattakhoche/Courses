@@ -33,8 +33,11 @@ class UserRegister(Resource):
         print(user)
         if UserModel.find_by_username(user.username):
             return {"message": USER_ALREADY_EXISTS}, 400
-
+        
         user.save_to_db()
+        user.send_email()
+
+        
 
         return {"message": CREATED_SUCCESSFULLY}, 201
 
@@ -103,4 +106,5 @@ class UserConfirmation(Resource):
             
         user.activated = True
         user.save_to_db()
-        return make_response(render_template("confirmation.html",email=user.username),200)
+        headers = {"Content-Type":"text/html"}
+        return make_response(render_template("confirmation.html",email=user.username),200,headers)
