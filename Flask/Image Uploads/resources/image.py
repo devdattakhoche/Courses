@@ -18,7 +18,7 @@ class ImageUpload(Resource):
         '''
         Used to upload an image file
         '''
-        # print(request)
+        print(request.files)
         data  = image_schema.load(request.files)
         print(data)
         
