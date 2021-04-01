@@ -8,19 +8,19 @@ from marshmallow import ValidationError
 from db import db
 from ma import ma
 from resources.user import UserRegister, UserLogin, User
-
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URI", "sqlite:///data.db"
+    "DATABASE_URI", "postgresql://devdattakhoche:15412342@localhost:5432/test"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["PROPAGATE_EXCEPTIONS"] = True
-app.secret_key = "jose"
+app.secret_key = "VBE4ztw2UHhtKZxTZgyMSXsWPfhbEN4w"
 api = Api(app)
 jwt = JWTManager(app)
-
+migrate = Migrate(app,db)
 
 @app.before_first_request
 def create_tables():
@@ -36,7 +36,7 @@ api.add_resource(UserRegister, "/register")
 api.add_resource(User, "/user/<int:user_id>")
 api.add_resource(UserLogin, "/login")
 
+db.init_app(app)
+ma.init_app(app)
 if __name__ == "__main__":
-    db.init_app(app)
-    ma.init_app(app)
     app.run(port=5000, debug=True)
