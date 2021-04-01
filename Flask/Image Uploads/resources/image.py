@@ -18,10 +18,10 @@ class ImageUpload(Resource):
         '''
         Used to upload an image file
         '''
-        try:
-            data  = image_schema.load(request.files)
-        except ValidationError as err:
-            return err.messages, 500
+        # print(request)
+        data  = image_schema.load(request.files)
+        print(data)
+        
         user_id = get_jwt_identity()
         folder = f"user_{user_id}" # static/images/user_1
 
