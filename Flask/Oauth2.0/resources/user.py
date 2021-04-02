@@ -3,7 +3,8 @@ from flask import request
 from werkzeug.security import safe_str_cmp
 from flask_jwt_extended import (
     create_access_token,
-    create_refresh_token
+    create_refresh_token,
+    jwt_required
 )
 from libs.strings import gettext
 from models.user import UserModel
@@ -64,3 +65,22 @@ class UserLogin(Resource):
             return {"access_token": access_token, "refresh_token": refresh_token}, 200
 
         return {"message": gettext("user_invalid_credentials")}, 401
+
+
+class SetPassword(Resource):
+    
+    @classmethod
+    @jwt_required(fresh=True)
+    def post(cls):
+        user_json = request.get_json()
+        user_data = user_schema.load(user_json)
+        user = UserModel.find_by_username(user_data.username)
+
+        if not user:
+            return {"message": gettext("user_not_found")}, 400
+
+        user.password = user_data.password
+        user.save_to_db()
+
+        return {"message":"User password Set successfully!"}, 201
+
