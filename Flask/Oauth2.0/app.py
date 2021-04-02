@@ -4,13 +4,15 @@ from flask_jwt_extended import JWTManager
 from marshmallow import ValidationError
 from dotenv import load_dotenv
 
+load_dotenv(".env")
+
+from oa import oauth
 from db import db
 from ma import ma
 from resources.user import UserRegister, UserLogin, User
 
 
 app = Flask(__name__)
-load_dotenv(".env")
 app.config.from_object("default_config")
 app.config.from_envvar("APPLICATION_SETTINGS")
 api = Api(app)
@@ -34,4 +36,5 @@ api.add_resource(UserLogin, "/login")
 if __name__ == "__main__":
     db.init_app(app)
     ma.init_app(app)
+    oauth.init_app(app)
     app.run(port=5000)

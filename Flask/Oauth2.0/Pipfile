@@ -12,6 +12,7 @@ python-dotenv = "*"
 marshmallow-sqlalchemy = "*"
 marshmallow = "*"
 flask-marshmallow = "*"
+flask-oauthlib = "*"
 
 [dev-packages]
 
