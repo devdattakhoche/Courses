@@ -25,7 +25,7 @@ SECRET_KEY = '(f03fk35^$#+en^w^27frvoqopu$6wfen(#xu4pc8-srlo-7@w'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['0.0.0.0']
 
 
 # Application definition
@@ -78,8 +78,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'pollsdb',
-        'USER': 'pollsuser',
-        'PASSWORD': 'pollspass',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
         'HOST': 'db',
         'PORT': '5432',
     }
