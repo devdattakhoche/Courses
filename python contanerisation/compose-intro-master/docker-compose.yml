@@ -18,8 +18,8 @@ services:
     volumes:
       - polls_vol:/var/lib/postgresql/data
     environment:
-      - POSTGRES_USER=pollsuser
-      - POSTGRES_PASSWORD=pollspass
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=pollsdb
 
 # Django Polls Application Server
@@ -28,7 +28,7 @@ services:
     networks:
       - polls_net
     environment:
-      - DATABASE_URL=postgres://pollsuser:pollspass@db/pollsdb
+      - DATABASE_URL=postgres://postgres:postgres@db/pollsdb
     depends_on:
       - db
 
