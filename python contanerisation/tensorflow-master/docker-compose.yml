@@ -1,0 +1,32 @@
+version: "3.7"
+
+services:
+  tf_jupyter:
+    image: tensorflow/tensorflow:1.14.0-py3-jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - "./notebooks/:/tf/notebooks"
+
+  tf_model3:
+    image: tf_serving:model3
+    build:
+      context: .
+      dockerfile: Dockerfile.tf-model3
+    deploy:
+      replicas: 3
+      endpoint_mode: vip
+
+  tf_gpu:
+    image: tensorflow/tensorflow:1.14.0-gpu-py3-jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - "./notebooks/:/tf/notebooks"
+
+  tf_latest:
+    image: tensorflow/tensorflow:latest-py3-jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - "./notebooks/:/tf/notebooks"
