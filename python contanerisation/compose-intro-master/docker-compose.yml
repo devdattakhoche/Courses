@@ -1,0 +1,43 @@
+version: "3.7"
+
+# Network to used for Application Components Service Discovery and communication
+networks:
+  polls_net:
+
+# Persisten Volume to hold Database data files
+volumes:
+  polls_vol:
+
+# Services representing Application Components
+services:
+# Postgres Database Engine
+  db:
+    image: postgres:11.3
+    networks:
+      - polls_net
+    volumes:
+      - polls_vol:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=pollsuser
+      - POSTGRES_PASSWORD=pollspass
+      - POSTGRES_DB=pollsdb
+
+# Django Polls Application Server
+  app1:
+    image: pythonincontainers/django-polls:nginx
+    networks:
+      - polls_net
+    environment:
+      - DATABASE_URL=postgres://pollsuser:pollspass@db/pollsdb
+    depends_on:
+      - db
+
+# Proxy Server
+  proxy:
+    image: pythonincontainers/mynginx:latest
+    networks:
+      - polls_net
+    ports:
+      - "8000:8000"
+    depends_on:
+      - app1

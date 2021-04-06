@@ -1,0 +1,25 @@
+version: "3.7"
+
+# Services section declares Containers running Application Components
+services:
+# Database Service
+  db:
+    ...
+
+# Application Logic Service
+  app:
+    ...
+
+# Proxy Service
+  proxy:
+    ...
+
+# Networks section declares Virtual Networks for Application Components
+networks:
+  net1:
+  net2:
+
+# Volumes section declares Persistent Volumes used by Application Components
+volumes:
+  vol1:
+  vol2:
