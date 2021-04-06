@@ -1,0 +1,40 @@
+version: "3.7"
+
+services:
+
+  db:
+# Postgres DB Container Version 11.3
+    image: postgres:11.3
+    networks:
+      - polls_net
+    volumes:
+      - polls_vol:/var/lib/postgresql/data
+    env_file:
+      - project-files/deployment.env
+    command:
+      - 'postgres'
+      - '-c'
+      - 'wal_level=replica'
+      - '-c'
+      - 'archive_mode=on'
+
+  app1:
+    image: pythonincontainers/django-polls:nginx
+    networks:
+      - polls_net
+    env_file:
+      - project-files/deployment.env
+
+  proxy:
+    image: pythonincontainers/mynginx:latest
+    networks:
+      - polls_net
+    ports:
+      - "8000:8000"
+
+networks:
+  polls_net:
+
+volumes:
+  polls_vol:
+ 

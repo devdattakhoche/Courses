@@ -1,0 +1,17 @@
+version: "3.7"
+
+services:
+
+  app2:
+    image: pythonincontainers/django-polls:nginx
+    networks:
+      - polls_net
+    env_file:
+      - project-files/deployment.env
+
+  proxy:
+    volumes:
+      - ./project-files/mysite_nginx_lb.conf:/etc/nginx/conf.d/mysite_nginx.conf
+    depends_on:
+      - app2
+ 

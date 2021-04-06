@@ -1,0 +1,36 @@
+version: "3.7"
+
+volumes:
+  polls_clone:
+    name: polls_clone
+
+services:
+# Initilization Service
+# please run with:
+# docker-compose -f django-polls-deploy.yml -f django-polls-ops.yml run --rm init
+  init:
+    image: pythonincontainers/django-polls:nginx
+    networks:
+      - polls_net
+    env_file:
+      - project-files/deployment.env
+    command: ["/bin/bash", "-c",
+              "python manage.py migrate;
+               python manage.py loaddata initial_data.json;
+               python manage.py createsuperuser"]
+    tty: true
+
+# Database Clonning Service
+# Performs full, on-line Backup of "db" Service onto "polls_clone" Volume
+# Removes previous backup before taking fresh one
+# please run with:
+# docker-compose -f django-polls-deploy.yml -f django-polls-ops.yml run --rm db-clone
+  db-clone:
+    image: postgres:11.4
+    volumes:
+      - polls_clone:/clone
+    entrypoint: ["/bin/bash", "-c",
+              "rm -rf /clone/*;
+               pg_basebackup -h localhost -U pollsuser -D /clone"]
+    network_mode: "service:db"
+ 
