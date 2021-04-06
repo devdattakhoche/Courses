@@ -1,0 +1,58 @@
+version: "3.7"
+
+networks:
+  hello_net:
+    driver: overlay
+    name: hello_net
+    attachable: true
+
+configs:
+  nginx_config:
+    file: ./flask_lb_nginx.conf
+
+secrets:
+  my_password:
+    file: ./my_password.txt
+
+services:
+  hello:
+    image: pythonincontainers/flask-hostname:v1
+    networks:
+      - hello_net
+    secrets:
+      - source: my_password
+        target: my_password
+        uid: '999'
+        gid: '0'
+        mode: 0440
+    hostname: "hello-{{.Task.Slot}}"
+    deploy:
+      mode: replicated
+      replicas: 6
+      endpoint_mode: vip
+      placement:
+        constraints:
+          - node.role == worker
+    labels:
+      com.example.stack.composefiles: "flask_hostname.v2.yml"
+
+  proxy:
+    image: nginx:1.16.0
+    networks:
+      - hello_net
+    configs:
+      - source: nginx_config
+        target: /etc/nginx/conf.d/hello.conf
+    ports:
+      - target: 5000
+        published: 5000
+        mode: ingress
+    deploy:
+      mode: replicated
+      replicas: 2
+      endpoint_mode: vip
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        com.example.stack.composefiles: "flask_hostname.v2.yml"

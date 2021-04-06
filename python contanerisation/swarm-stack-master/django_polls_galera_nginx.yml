@@ -1,0 +1,55 @@
+version: "3.7"
+
+networks:
+  galera_net:
+    driver: overlay
+    name: galera_net
+    attachable: true
+  proxy_net:
+    driver: overlay
+
+configs:
+  proxy_conf:
+    file: ./mysite_nginx_in_swarm.conf
+
+services:
+
+  galera:
+    image: pythonincontainers/galera:latest
+    env_file:
+      - ./db_params.env
+    networks:
+      - galera_net
+    deploy:
+      mode: global
+# Galera Image requires SERVICE_NAME variable to be set to actual name
+# of 'galera' Service. Value below assumes the Stack is deployed
+# with 'django-polls' Stack Name.
+# Service Name is ''<stack_name>_galera'
+    environment:
+      SERVICE_NAME: django-polls_galera
+
+  app:
+    image: pythonincontainers/django-polls:nginx
+    networks:
+      - galera_net
+      - proxy_net
+    env_file:
+      - ./db_params.env
+    deploy:
+      mode: replicated
+      replicas: 3
+
+  proxy:
+    image: pythonincontainers/mynginx:latest
+    networks:
+      - proxy_net
+    ports:
+      - target: 8000
+        published: 8000
+        mode: host
+    configs:
+      - source: proxy_conf
+        target: /etc/nginx/conf.d/mysite_nginx.conf
+    deploy:
+      mode: global

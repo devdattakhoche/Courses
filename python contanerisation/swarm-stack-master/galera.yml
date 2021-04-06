@@ -1,0 +1,52 @@
+version: "3.7"
+
+networks:
+  galera_net:
+    driver: overlay
+    name: galera_net
+    attachable: true
+
+configs:
+  maxscale_script:
+    file: ./maxscale_entrypoint.sh
+
+services:
+    galera:
+        image: pythonincontainers/galera:latest
+        env_file:
+          - ./db_params.env
+        networks:
+          - galera_net
+        deploy:
+          mode: replicated
+          replicas: 3
+        environment:
+          SERVICE_NAME: galera_galera
+
+    maxscale:
+        image: mariadb/maxscale:2.3
+        env_file:
+            - ./db_params.env
+        configs:
+            - source: maxscale_script
+              target: /docker-entrypoint.sh
+              mode: 0755
+        networks:
+          - galera_net
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin:4.8
+        restart: always
+        ports:
+           - target: 80
+             published: 8088
+        networks:
+          - galera_net
+        environment:
+          PMA_HOST: maxscale
+        volumes:
+          - /sessions
+        deploy:
+          placement:
+            constraints:
+              - node.role == manager

@@ -1,0 +1,33 @@
+version: "3.7"
+
+networks:
+  galera_net:
+    driver: overlay
+    name: galera_net
+    attachable: true
+
+services:
+
+  galera:
+    image: pythonincontainers/galera:latest
+    env_file:
+      - ./db_params.env
+    networks:
+      - galera_net
+    deploy:
+      mode: global
+    environment:
+      SERVICE_NAME: django-polls_galera
+
+  app:
+    image: pythonincontainers/django-polls:nginx
+    networks:
+      - galera_net
+    env_file:
+      - ./db_params.env
+    ports:
+      - target: 8000
+        published: 8000
+        mode: host
+    deploy:
+      replicas: 3
