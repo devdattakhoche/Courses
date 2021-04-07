@@ -4,8 +4,8 @@ natural join orders
 natural join order_details as od
 join products using (productid)
 join categories  using (categoryid)
-group by rollup(companyname, categoryname, productname);
-order by companyname,categoryname,productname
+group by rollup(companyname, categoryname, productname)
+order by companyname,categoryname,productname;
 
 select s.companyname as supplier, c.companyname as buyer,productname, sum(od.unitprice*quantity)
 from suppliers as s
