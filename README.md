@@ -1,1 +1,2 @@
-# Redcarpet-Courses
+# Courses
+
